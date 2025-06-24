@@ -1,0 +1,6 @@
+window:
+  width: 800
+  height: 600
+  title: "game-engine"
+
+start_scene: "game/scenes/intro.yaml"
