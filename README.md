@@ -1,82 +1,107 @@
-# 🌱 Project Title
+# 🎮 game-engine
 
-> _A humble beginning to something meaningful._
+> A handcrafted point-and-click engine for narrative games, puzzles, surreal adventures, and story experiments — built from scratch in Python.
 
-Welcome to this PtiCalin-flavored project template.  
-This repo is designed for smooth setup, clear structure, and joyful tinkering.
+`game-engine` is a modular, lightweight game engine for 2D point-and-click adventures. Inspired by games like **A Little to the Left**, **Rusty Lake**, **Ace Attorney**, and **Outer Wilds**, it's designed to be flexible, extensible, and totally under your creative control.
 
-<div align="center">
-
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Status: WIP](https://img.shields.io/badge/status-in_progress-yellow.svg)](#)
-[![Pull Requests Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./.github/pull_request_template.md)
-[![GitHub Discussions](https://img.shields.io/badge/💬-Discussions-blueviolet?logo=github)](https://github.com/your-username/general-template-repo/discussions)
-[![Sponsor PtiCalin](https://img.shields.io/badge/Sponsor-💖-f06292.svg?logo=githubsponsors)](https://github.com/sponsors/your-username)
-
-</div>
+No dependencies on Unity, Godot, or any bloated middleware — just Python, PyGame, and deeply human design.
 
 ---
 
-## 🧰 Features
+## ✨ Features (WIP)
 
-- 🌿 Clean and modular folder layout  
-- 📜 MIT License included  
-- 🧭 Custom issue and pull request templates  
-- 💬 GitHub Discussions enabled  
-- 💖 Sponsor link to support creative tooling  
+- 🧭 **Scene Manager** – Room transitions, interaction zones, layered backgrounds
+- 🧩 **Puzzle Logic** – Customizable item interactions, object states, environment triggers
+- 🗃️ **YAML-Driven** – Game logic, items, dialogues, scenes, and timelines authored in human-readable formats
+- 🎒 **Inventory System** – Collect, combine, and use items with context-sensitive feedback
+- 💬 **Dialogue Engine** – Branching conversations, memory-aware options, emotional logic
+- ⏳ **Timeline Engine** – Event synchronization, time loops, reactive world logic
+- 🧠 **Character Traits** – NPCs with complex states, personalities, and dynamic interactions
+- 🛠️ **Engine-Editor Split** – Clean separation between runtime and creative toolkit (planned)
+
+---
+
+## 🧠 Inspirations
+
+> This engine is built with love for:
+> - A Little to the Left  
+> - The Cube Collection  
+> - Rusty Lake series  
+> - Frog Detective  
+> - Ace Attorney  
+> - Escape Academy  
+> - Outer Wilds  
+> - Potion Craft  
+> - Tangle Tower  
+> - The Secret of Monkey Island  
+> - ...and every game that felt a little weird, personal, or magical ✨
+
+---
+
+## 🛠️ Tech Stack
+
+- **Language**: Python 3.11+
+- **Renderer**: PyGame
+- **Data**: YAML-based modular game definitions
+- **Style**: Pure Python, no GUI frameworks or editors (yet)
 
 ---
 
 ## 🚀 Getting Started
 
-Clone this repo and start building:
+> You'll need Python 3.11+ and pip installed.
 
 ```bash
-git clone https://github.com/your-username/general-template-repo.git
-cd general-template-repo
+git clone https://github.com/yourusername/game-engine.git
+cd game-engine
+pip install -r requirements.txt
+python main.py
 ```
 
-### 🛠 Local Setup
+✨ First demo loads a single room with one object and a small dialogue scene (in progress)
 
-```bash
-npm install       # or pip install -r requirements.txt
-npm run dev       # or your preferred dev command
-```
+## 📁 Project Structure
 
----
+game-engine/
+├── engine/          # Core engine logic (scene manager, UI, etc)
+├── game/            # Game data: scenes, items, characters
+│   ├── scenes/
+│   ├── items/
+│   ├── dialogue/
+│   └── timeline/
+├── ui/              # Inventory bar, contextual menus, etc
+├── assets/          # Images, audio, fonts
+├── main.py          # Game launcher
+└── config.yaml      # Global config
 
-## 🤝 Contributing
+## 💡 Vision
 
-We welcome all kinds of contributions! 💡
+This project isn’t just an engine. It’s an invitation to tell surreal, beautiful stories in playable form — and to build the exact tools you wish you had as a kid.
 
-This repo uses custom templates for:
-- [🐛 Bug Reports](./.github/ISSUE_TEMPLATE/bug.yml)
-- [🌟 Feature Requests](./.github/ISSUE_TEMPLATE/feature-request.yml)
-- [📦 Pull Requests](./.github/pull_request_template.md)
+You can fork it, remix it, turn it into a framework, or just build your own strange little game.
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.  
-Or join us in [💬 GitHub Discussions](https://github.com/your-username/general-template-repo/discussions) to share ideas.
+## 📚 Related Projects
+Some repos that inspired or informed this work:
 
----
+- Droggelbecher/Grail
+- ThomasTheSpaceFox/Desutezeoid
+- bladecoder/bladecoder-adventure-engine
+- rpgboss/rpgboss
+
+## 🧵 Topics
+python pygame game-engine point-and-click narrative-games dialogue-engine puzzle-game
+interactive-fiction modular-system open-source yaml-driven time-loop experimental-games surreal-games
+
+## 🐣 Status
+🚧 Actively being built. Early prototyping phase.
+Expect magic, messiness, and many commits at 2am.
+
+## 🧙‍♂️ Creator
+Charlie Bouchard — LinkedIn · GitHub
+✨ Making vaults, stories, and software that hug you back.
+
+## ☕ Support
+If you like this project, consider dropping a star ⭐ or buying me a tea: buymeacoffee.com/pticalin
 
 ## 📜 License
-
-Distributed under the [MIT License](LICENSE).  
-You are free to fork, remix, and share — just be kind.
-
----
-
-## 💌 Sponsor
-
-If this template saved you time or made you smile, consider supporting:  
-[**github.com/sponsors/your-username**](https://github.com/sponsors/your-username)
-
----
-
-## 🧠 Notes from PtiCalin
-
-> “Structure is self-care.  
-> Documentation is love.  
-> Start simple — bloom later.”
-
----
+MIT — use it, fork it, break it, rebuild it.

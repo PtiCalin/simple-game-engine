@@ -2,7 +2,7 @@
 
 All contributors are expected to foster a safe, respectful, and inclusive environment.
 
-## 💫 The PtiCalin Pledge
+## Our Pledge
 
 We commit to kindness, curiosity, and compassion — toward ourselves and each other.
 
