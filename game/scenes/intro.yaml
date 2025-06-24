@@ -1,0 +1,10 @@
+scene:
+  id: intro
+  background: null
+  mode: simple
+  features:
+    music: assets/intro.mp3
+    time_loop: 5000
+    weather: rain
+  overlays:
+    - assets/game-engine.png
