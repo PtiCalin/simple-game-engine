@@ -1,0 +1,70 @@
+# 📄 Obsidian Plugin Template Configuration
+
+id: plugin-template-obsidian
+title: "Obsidian Plugin Template – PtiCalin Style"
+type: template
+category: obsidian-plugin
+section: templates
+role: plugin-template
+folder: system/templates
+tags: [template, obsidian, plugin, vaultos, pticalin]
+version: 1.0
+
+# 📊 Status & Lifecycle
+status: stable
+visibility: public
+created: 2025-05-30
+updated: 2025-05-30
+
+# 📚 Context & Description
+summary: >
+  A preconfigured Obsidian plugin template with TypeScript, Rollup, 
+  plugin manifest, and VaultOS-friendly structure.
+
+description: |
+  This template is the foundation for building modular and beautiful Obsidian plugins. 
+  It includes all necessary config and build files to get started with TypeScript,
+  plus bonus features aligned with VaultOS development, including structured folders for
+  subplugins, compiled logic, and standardized automation patterns.
+
+  Features include:
+  - 📦 Plugin manifest and entry file setup
+  - ⚙️ TypeScript + Rollup for builds
+  - 🧬 src/, dist/, ops/, config/ folder convention (aligned with VaultOS)
+  - 📜 LICENSE, README, CONTRIBUTING, Code of Conduct, CHANGELOG
+  - 🪄 GitHub Actions-ready `.github/` folder
+
+purpose: "Kickstart Obsidian plugin development with structure, style, and extensibility."
+scope: "Modular plugins for Obsidian (especially VaultOS-compatible)"
+use_cases: ["obsidian development", "plugin scaffolding", "modular vault systems"]
+audience: ["plugin developers", "VaultOS contributors", "tinkerers", "builders"]
+
+# 🧱 Relationships
+parent: "plugin-templates"
+children: []
+friends: ["repository-template-general"]
+related: ["vaultos-subplugin-template", "vaultos-module-manager"]
+
+# 🌐 Dynamic GitHub URLs
+github:
+  base: "https://github.com/<%= github.user %>/<%= github.repo %>"
+  manifest: "<%= github.base %>/blob/main/manifest.json"
+  readme: "<%= github.base %>/blob/main/README.md"
+  contributing: "<%= github.base %>/blob/main/CONTRIBUTING.md"
+  license: "<%= github.base %>/blob/main/LICENSE"
+  changelog: "<%= github.base %>/blob/main/change-log.md"
+  discussions: "<%= github.base %>/discussions"
+  sponsor: "https://github.com/sponsors/<%= github.user %>"
+
+# ⚙️ Obsidian Plugin Specific
+plugin:
+  manifest_path: "manifest.json"
+  entry_file: "src/main.ts"
+  output_dir: "dist/"
+  build_tool: "rollup"
+  script_language: "ts"
+
+# 💌 Attribution
+author: "Charlie (PtiCalin)"
+maintainers: ["<%= github.user %>"]
+sponsor_link: "<%= github.sponsor %>"
