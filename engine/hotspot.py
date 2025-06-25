@@ -27,4 +27,7 @@ class Hotspot:
             manager.show_dialogue(self.target)
         elif self.action == "toggle_flag" and self.target:
             manager.toggle_flag(self.target)
+        elif self.action == "teleport" and self.target:
+            region, _, scene = self.target.partition(":")
+            manager.teleport(region, scene or None)
 

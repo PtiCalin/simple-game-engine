@@ -6,6 +6,7 @@ import pygame
 
 from .scene import Scene
 from .hotspot import Hotspot
+from .world_loader import WorldLoader, Region
 
 
 class SceneManager:
@@ -21,7 +22,15 @@ class SceneManager:
         self.hotspots = []
         self.flags = {}
         self.scene_start_time = 0
-        self.load_start_scene()
+        self.scenes_dir = self.config.get("scenes_dir", "game/scenes")
+        self.world_loader: WorldLoader | None = None
+        self.current_region: Region | None = None
+        self.current_scene_id: str | None = None
+
+        if self.config.get("start_world"):
+            self.load_start_world()
+        else:
+            self.load_start_scene()
 
     # ------------------------------------------------------------------
     # Scene Loading
@@ -33,7 +42,20 @@ class SceneManager:
             raise ValueError("Missing 'start_scene' in config")
 
         self.current_scene = self.load_scene(scene_path)
+        self.current_scene_id = self.current_scene.id
         self.activate_scene(self.current_scene)
+
+    def load_start_world(self) -> None:
+        """Load the starting world and initialize the first region."""
+        world_path = self.config.get("start_world")
+        if not world_path:
+            raise ValueError("Missing 'start_world' in config")
+
+        self.world_loader = WorldLoader(world_path)
+        self.current_region = self.world_loader.first_region()
+        if not self.current_region or not self.current_region.scenes:
+            raise ValueError("World file has no regions or scenes")
+        self.open_scene(self.current_region.scenes[0])
 
     def load_scene(self, path):
         """Read a YAML file and return a :class:`Scene` instance."""
@@ -95,11 +117,30 @@ class SceneManager:
     # ------------------------------------------------------------------
     # Hotspot Actions
     # ------------------------------------------------------------------
+    def scene_path_from_id(self, scene_id: str) -> str:
+        return os.path.join(self.scenes_dir, f"{scene_id}.yaml")
+
     def open_scene(self, path: str) -> None:
-        """Load another scene from ``path`` and activate it."""
+        """Load another scene from ``path`` or scene id and activate it."""
+        if not os.path.exists(path):
+            path = self.scene_path_from_id(path)
+            self.current_scene_id = os.path.splitext(os.path.basename(path))[0]
+        else:
+            self.current_scene_id = os.path.splitext(os.path.basename(path))[0]
         scene = self.load_scene(path)
         self.current_scene = scene
         self.activate_scene(scene)
+
+    def teleport(self, region_id: str, scene_id: str | None = None) -> None:
+        if not self.world_loader:
+            return
+        region = self.world_loader.get_region(region_id)
+        if not region:
+            return
+        self.current_region = region
+        target_scene = scene_id or (region.scenes[0] if region.scenes else None)
+        if target_scene:
+            self.open_scene(target_scene)
 
     def show_dialogue(self, text: str) -> None:
         """Display dialogue text or integrate with a dialogue system."""

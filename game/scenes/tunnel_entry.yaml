@@ -1,0 +1,12 @@
+scene:
+  id: tunnel_entry
+  background: null
+hotspots:
+  - id: back_to_canal
+    area: [50,50,100,100]
+    action: open_scene
+    target: canal_start
+  - id: to_mileend
+    area: [200,50,100,100]
+    action: teleport
+    target: mileend:ruelle_portail
