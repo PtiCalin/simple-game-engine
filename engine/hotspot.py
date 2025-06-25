@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 from typing import Tuple, Optional
+
+from .game_state import GameState
 import pygame
 
 @dataclass
@@ -10,6 +12,7 @@ class Hotspot:
     area: Tuple[int, int, int, int]
     action: str
     target: Optional[str] = None
+    condition: Optional[str] = None
 
     def rect(self) -> pygame.Rect:
         """Return the pygame.Rect representing this hotspot's area."""
@@ -30,4 +33,8 @@ class Hotspot:
         elif self.action == "teleport" and self.target:
             region, _, scene = self.target.partition(":")
             manager.teleport(region, scene or None)
+
+    def is_active(self, state: GameState) -> bool:
+        """Return ``True`` if this hotspot's condition is met."""
+        return state.check_condition(self.condition)
 

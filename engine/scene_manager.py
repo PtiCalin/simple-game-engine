@@ -4,6 +4,8 @@ import os
 import yaml
 import pygame
 
+from .game_state import GameState
+
 from .scene import Scene
 from .hotspot import Hotspot
 from .world_loader import WorldLoader, Region
@@ -20,7 +22,8 @@ class SceneManager:
         self.overlays = []
         self.active_features = {}
         self.hotspots = []
-        self.flags = {}
+        self.game_state = GameState(self.config.get("save_file", "save.json"))
+        self.game_state.load()
         self.scene_start_time = 0
         self.scenes_dir = self.config.get("scenes_dir", "game/scenes")
         self.world_loader: WorldLoader | None = None
@@ -80,6 +83,7 @@ class SceneManager:
                     area=area,
                     action=hs.get("action", ""),
                     target=hs.get("target"),
+                    condition=hs.get("condition"),
                 )
             )
         return Scene(
@@ -129,6 +133,9 @@ class SceneManager:
             self.current_scene_id = os.path.splitext(os.path.basename(path))[0]
         scene = self.load_scene(path)
         self.current_scene = scene
+        if scene.id and scene.id not in self.game_state.unlocked_scenes:
+            self.game_state.unlocked_scenes.append(scene.id)
+            self.game_state.save()
         self.activate_scene(scene)
 
     def teleport(self, region_id: str, scene_id: str | None = None) -> None:
@@ -148,8 +155,9 @@ class SceneManager:
         print(text)
 
     def toggle_flag(self, flag: str) -> None:
-        """Flip the boolean value of ``flag`` in ``self.flags``."""
-        self.flags[flag] = not self.flags.get(flag, False)
+        """Flip the boolean value of ``flag`` in :class:`GameState`."""
+        self.game_state.toggle_flag(flag)
+        self.game_state.save()
 
     def run(self):
         clock = pygame.time.Clock()
@@ -159,6 +167,8 @@ class SceneManager:
                     self.running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     for hs in self.hotspots:
+                        if not hs.is_active(self.game_state):
+                            continue
                         if hs.check_click(event.pos):
                             hs.trigger(self)
 
