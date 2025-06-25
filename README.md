@@ -23,6 +23,7 @@ possibilities.
 - Scene manager with interactive hotspots
 - YAML-based item, character, and puzzle logic
 - Inventory and contextual action systems
+- Persistent ``GameState`` for flags and progress
 - Modular dialogue engine with branching paths
 - Timeline system for synced events and time loops
 - Support for character traits, interaction effects, and narrative memory
