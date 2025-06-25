@@ -1,0 +1,12 @@
+scene:
+  id: ruelle_portail
+  background: null
+hotspots:
+  - id: to_balcon
+    area: [50,50,100,100]
+    action: open_scene
+    target: balcon_secret
+  - id: to_vieuxport
+    area: [200,50,100,100]
+    action: teleport
+    target: vieuxport:canal_start

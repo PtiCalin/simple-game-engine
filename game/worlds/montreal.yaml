@@ -1,0 +1,12 @@
+world:
+  id: montreal
+  title: "Surreal Montreal"
+  regions:
+    - id: mileend
+      scenes:
+        - ruelle_portail
+        - balcon_secret
+    - id: vieuxport
+      scenes:
+        - canal_start
+        - tunnel_entry

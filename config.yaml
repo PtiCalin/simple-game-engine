@@ -3,4 +3,5 @@ window:
   height: 600
   title: "game-engine"
 
-start_scene: "game/scenes/intro.yaml"
+start_world: "game/worlds/montreal.yaml"
+scenes_dir: "game/scenes"
