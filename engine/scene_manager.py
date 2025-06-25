@@ -5,6 +5,7 @@ import yaml
 import pygame
 
 from .game_state import GameState
+from .dialogue_engine import DialogueEngine
 
 from .scene import Scene
 from .hotspot import Hotspot
@@ -24,6 +25,7 @@ class SceneManager:
         self.hotspots = []
         self.game_state = GameState(self.config.get("save_file", "save.json"))
         self.game_state.load()
+        self.dialogue_engine = DialogueEngine(self.game_state)
         self.scene_start_time = 0
         self.scenes_dir = self.config.get("scenes_dir", "game/scenes")
         self.world_loader: WorldLoader | None = None
@@ -149,10 +151,12 @@ class SceneManager:
         if target_scene:
             self.open_scene(target_scene)
 
-    def show_dialogue(self, text: str) -> None:
-        """Display dialogue text or integrate with a dialogue system."""
-        # Placeholder: print to console for now
-        print(text)
+    def show_dialogue(self, dialogue_id: str) -> None:
+        """Start a dialogue by its identifier."""
+        if self.dialogue_engine:
+            self.dialogue_engine.start(dialogue_id)
+        else:
+            print(dialogue_id)
 
     def toggle_flag(self, flag: str) -> None:
         """Flip the boolean value of ``flag`` in :class:`GameState`."""
@@ -165,7 +169,10 @@ class SceneManager:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if self.dialogue_engine.active:
+                    self.dialogue_engine.handle_event(event)
+                    continue
+                if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     for hs in self.hotspots:
                         if not hs.is_active(self.game_state):
                             continue
@@ -189,5 +196,6 @@ class SceneManager:
                 if pygame.time.get_ticks() - self.scene_start_time >= duration:
                     self.activate_scene(self.current_scene)
 
+            self.dialogue_engine.draw(self.screen)
             pygame.display.flip()
             clock.tick(60)
