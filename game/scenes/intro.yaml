@@ -8,3 +8,17 @@ scene:
     weather: rain
   overlays:
     - assets/game-engine.png
+
+hotspots:
+  - id: restart
+    area: [50, 50, 100, 100]
+    action: open_scene
+    target: game/scenes/intro.yaml
+  - id: greeting
+    area: [200, 50, 100, 100]
+    action: show_dialogue
+    target: "Hello there!"
+  - id: toggle
+    area: [350, 50, 100, 100]
+    action: toggle_flag
+    target: example_flag

@@ -5,6 +5,7 @@ import yaml
 import pygame
 
 from .scene import Scene
+from .hotspot import Hotspot
 
 
 class SceneManager:
@@ -17,6 +18,8 @@ class SceneManager:
         self.current_scene = None
         self.overlays = []
         self.active_features = {}
+        self.hotspots = []
+        self.flags = {}
         self.scene_start_time = 0
         self.load_start_scene()
 
@@ -41,18 +44,36 @@ class SceneManager:
             data = yaml.safe_load(fh) or {}
 
         scene_data = data.get("scene", {})
+        hotspots_data = data.get("hotspots", []) or []
+        hotspots: list[Hotspot] = []
+        for hs in hotspots_data:
+            if not isinstance(hs, dict):
+                continue
+            area = tuple(hs.get("area", [0, 0, 0, 0]))
+            if len(area) != 4:
+                area = (0, 0, 0, 0)
+            hotspots.append(
+                Hotspot(
+                    id=hs.get("id", ""),
+                    area=area,
+                    action=hs.get("action", ""),
+                    target=hs.get("target"),
+                )
+            )
         return Scene(
             id=scene_data.get("id"),
             background=scene_data.get("background"),
             mode=scene_data.get("mode", "simple"),
             features=scene_data.get("features", {}) or {},
             overlays=scene_data.get("overlays", []) or [],
+            hotspots=hotspots,
         )
 
     def activate_scene(self, scene: Scene):
         """Load assets and enable features for the given scene."""
         self.overlays = []
         self.active_features = scene.features or {}
+        self.hotspots = scene.hotspots or []
         self.scene_start_time = pygame.time.get_ticks()
 
         music_path = self.active_features.get("music")
@@ -77,6 +98,10 @@ class SceneManager:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    for hs in self.hotspots:
+                        if hs.check_click(event.pos):
+                            hs.trigger(self)
 
             self.screen.fill((30, 30, 30))  # Dark background
 
