@@ -1,0 +1,6 @@
+puzzles:
+  - id: "sun_mirror"
+    type: "light_reflection"
+    scene: "garden_observatory"
+    solved: false
+    description: "Reflect sunlight to open the sealed gate"
