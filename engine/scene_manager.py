@@ -92,6 +92,24 @@ class SceneManager:
                 except pygame.error as exc:
                     print(f"Failed to load overlay '{overlay_path}': {exc}")
 
+    # ------------------------------------------------------------------
+    # Hotspot Actions
+    # ------------------------------------------------------------------
+    def open_scene(self, path: str) -> None:
+        """Load another scene from ``path`` and activate it."""
+        scene = self.load_scene(path)
+        self.current_scene = scene
+        self.activate_scene(scene)
+
+    def show_dialogue(self, text: str) -> None:
+        """Display dialogue text or integrate with a dialogue system."""
+        # Placeholder: print to console for now
+        print(text)
+
+    def toggle_flag(self, flag: str) -> None:
+        """Flip the boolean value of ``flag`` in ``self.flags``."""
+        self.flags[flag] = not self.flags.get(flag, False)
+
     def run(self):
         clock = pygame.time.Clock()
         while self.running:

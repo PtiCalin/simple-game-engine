@@ -22,11 +22,9 @@ class Hotspot:
     def trigger(self, manager: "SceneManager") -> None:
         """Execute the hotspot's action using the provided scene manager."""
         if self.action == "open_scene" and self.target:
-            scene = manager.load_scene(self.target)
-            manager.current_scene = scene
-            manager.activate_scene(scene)
+            manager.open_scene(self.target)
         elif self.action == "show_dialogue" and self.target:
-            print(self.target)
+            manager.show_dialogue(self.target)
         elif self.action == "toggle_flag" and self.target:
-            manager.flags[self.target] = not manager.flags.get(self.target, False)
+            manager.toggle_flag(self.target)
 
