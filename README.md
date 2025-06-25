@@ -52,6 +52,23 @@ pip install -r requirements.txt
 python main.py  # or your preferred dev command
 ```
 
+### ⏱ Timeline Events
+
+Scenes can schedule delayed actions:
+
+```yaml
+scene:
+  id: intro
+  features:
+    time_loop: true
+
+events:
+  - trigger: delay
+    time: 30  # seconds
+    action: set_flag
+    flag: door_closed
+```
+
 ---
 
 ## 🤝 Contributing

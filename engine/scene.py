@@ -14,3 +14,4 @@ class Scene:
     features: Dict[str, Any] = field(default_factory=dict)
     overlays: List[str] = field(default_factory=list)
     hotspots: List[Hotspot] = field(default_factory=list)
+    events: List[dict] = field(default_factory=list)

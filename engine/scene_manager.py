@@ -4,6 +4,8 @@ import os
 import yaml
 import pygame
 
+from .timeline_engine import TimelineEngine
+
 from .game_state import GameState
 from .dialogue_engine import DialogueEngine
 
@@ -26,6 +28,7 @@ class SceneManager:
         self.game_state = GameState(self.config.get("save_file", "save.json"))
         self.game_state.load()
         self.dialogue_engine = DialogueEngine(self.game_state)
+        self.timeline_engine = TimelineEngine(self.game_state)
         self.scene_start_time = 0
         self.scenes_dir = self.config.get("scenes_dir", "game/scenes")
         self.world_loader: WorldLoader | None = None
@@ -72,6 +75,7 @@ class SceneManager:
 
         scene_data = data.get("scene", {})
         hotspots_data = data.get("hotspots", []) or []
+        events_data = data.get("events", []) or []
         hotspots: list[Hotspot] = []
         for hs in hotspots_data:
             if not isinstance(hs, dict):
@@ -95,6 +99,7 @@ class SceneManager:
             features=scene_data.get("features", {}) or {},
             overlays=scene_data.get("overlays", []) or [],
             hotspots=hotspots,
+            events=events_data,
         )
 
     def activate_scene(self, scene: Scene):
@@ -103,6 +108,9 @@ class SceneManager:
         self.active_features = scene.features or {}
         self.hotspots = scene.hotspots or []
         self.scene_start_time = pygame.time.get_ticks()
+        self.timeline_engine.events = []
+        if scene.events:
+            self.timeline_engine.add_events(scene.events, self.scene_start_time, scene.id)
 
         music_path = self.active_features.get("music")
         if music_path and os.path.exists(music_path):
@@ -183,6 +191,8 @@ class SceneManager:
 
             for overlay in self.overlays:
                 self.screen.blit(overlay, (0, 0))
+
+            self.timeline_engine.update(pygame.time.get_ticks(), self.current_scene_id)
 
             if self.active_features.get("time_loop"):
                 duration = self.active_features.get("time_loop")
