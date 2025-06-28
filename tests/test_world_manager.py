@@ -12,6 +12,11 @@ from engine.world_manager import WorldManager
 def test_world_loading():
     wm = WorldManager("game/worlds/montreal.yaml")
     assert wm.world.id == "montreal"
+    assert wm.world.start_region == "mileend"
+    assert wm.world.global_music == "assets/game-engine.png"
+    assert wm.world.loop_time == 5000
+    assert wm.world.gravity == 9.8
+    assert wm.world.weather == "snow"
     assert "mileend" in wm.world.regions
     assert wm.current_region() is None or wm.current_region().id in wm.world.regions
 
