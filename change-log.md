@@ -9,6 +9,7 @@ All notable changes to this project will be documented in this file.
 - Hotspots now support an optional ``condition`` field for conditional
   interactions.
 - Added ``TimelineEngine`` to schedule delay-based events that modify ``GameState``.
+- Added ``WorldManager`` to handle world loading and state management.
 
 ## [0.1.0] - 2024-01-01
 

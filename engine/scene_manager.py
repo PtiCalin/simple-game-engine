@@ -11,7 +11,7 @@ from .dialogue_engine import DialogueEngine
 
 from .scene import Scene
 from .hotspot import Hotspot
-from .world_loader import WorldLoader, Region
+from .world_manager import WorldManager, Region
 
 
 class SceneManager:
@@ -31,7 +31,7 @@ class SceneManager:
         self.timeline_engine = TimelineEngine(self.game_state)
         self.scene_start_time = 0
         self.scenes_dir = self.config.get("scenes_dir", "game/scenes")
-        self.world_loader: WorldLoader | None = None
+        self.world_manager: WorldManager | None = None
         self.current_region: Region | None = None
         self.current_scene_id: str | None = None
 
@@ -59,11 +59,22 @@ class SceneManager:
         if not world_path:
             raise ValueError("Missing 'start_world' in config")
 
-        self.world_loader = WorldLoader(world_path)
-        self.current_region = self.world_loader.first_region()
+        self.world_manager = WorldManager(world_path)
+        self.current_region = self.world_manager.current_region()
+        if not self.current_region:
+            # fallback to first region if start_region missing
+            self.current_region = next(
+                iter(self.world_manager.world.regions.values()), None
+            )
+            if self.current_region:
+                self.world_manager.teleport(self.current_region.id)
         if not self.current_region or not self.current_region.scenes:
             raise ValueError("World file has no regions or scenes")
-        self.open_scene(self.current_region.scenes[0])
+        if not self.world_manager.current_scene():
+            self.world_manager.teleport(self.current_region.id)
+        scene_id = self.world_manager.current_scene()
+        if scene_id:
+            self.open_scene(scene_id)
 
     def load_scene(self, path):
         """Read a YAML file and return a :class:`Scene` instance."""
@@ -149,13 +160,13 @@ class SceneManager:
         self.activate_scene(scene)
 
     def teleport(self, region_id: str, scene_id: str | None = None) -> None:
-        if not self.world_loader:
+        if not self.world_manager:
             return
-        region = self.world_loader.get_region(region_id)
-        if not region:
-            return
-        self.current_region = region
-        target_scene = scene_id or (region.scenes[0] if region.scenes else None)
+        self.world_manager.teleport(region_id, scene_id)
+        region = self.world_manager.current_region()
+        if region:
+            self.current_region = region
+        target_scene = self.world_manager.current_scene()
         if target_scene:
             self.open_scene(target_scene)
 
