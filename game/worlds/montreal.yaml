@@ -1,6 +1,11 @@
 world:
   id: montreal
   title: "Surreal Montreal"
+  start_region: mileend
+  global_music: assets/music/montreal_theme.ogg
+  loop_time: 6000
+  gravity: 9.8
+  weather: rain
   regions:
     - id: mileend
       scenes:
