@@ -1,0 +1,8 @@
+region:
+  id: mileend
+  title: "Mile End"
+  map: assets/maps/mileend_map.png
+  entry_scene: ruelle_portail
+  scenes:
+    - ruelle_portail
+    - balcon_secret
