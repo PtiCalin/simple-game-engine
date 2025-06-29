@@ -2,10 +2,6 @@ world:
   id: montreal
   title: "Surreal Montreal"
   start_region: mileend
-  global_music: assets/game-engine.png
-  loop_time: 5000
-  gravity: 9.8
-  weather: snow
   regions:
     - id: mileend
       scenes:

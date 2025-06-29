@@ -13,12 +13,10 @@ def test_world_loading():
     wm = WorldManager("game/worlds/montreal.yaml")
     assert wm.world.id == "montreal"
     assert wm.world.start_region == "mileend"
-    assert wm.world.global_music == "assets/game-engine.png"
-    assert wm.world.loop_time == 5000
-    assert wm.world.gravity == 9.8
-    assert wm.world.weather == "snow"
     assert "mileend" in wm.world.regions
-    assert wm.current_region() is None or wm.current_region().id in wm.world.regions
+    assert wm.current_region() is not None
+    assert wm.current_region().id == "mileend"
+    assert wm.current_scene() == "ruelle_portail"
 
 
 def test_save_load_state(tmp_path):
@@ -30,4 +28,5 @@ def test_save_load_state(tmp_path):
     new_wm = WorldManager("game/worlds/montreal.yaml")
     new_wm.load_state(str(path))
     assert new_wm.state.current_region == "vieuxport"
+    assert new_wm.current_scene() == "canal_start"
 
