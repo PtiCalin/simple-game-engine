@@ -2,12 +2,20 @@ world:
   id: montreal
   title: "Surreal Montreal"
   start_region: mileend
+  global_music: assets/music/montreal_theme.ogg
+  loop_time: 6000
+  gravity: 9.8
+  weather: rain
   regions:
     - id: mileend
+      title: "Mile End"
+      entry_scene: ruelle_portail
       scenes:
         - ruelle_portail
         - balcon_secret
     - id: vieuxport
+      title: "Vieux Port"
+      entry_scene: canal_start
       scenes:
         - canal_start
         - tunnel_entry
