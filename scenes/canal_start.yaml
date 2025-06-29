@@ -1,0 +1,11 @@
+scene:
+  id: canal_start
+  background: assets/backgrounds/canal_start.png
+  mode: simple
+  features:
+    music: assets/music/canal_theme.ogg
+  hotspots:
+    - id: to_tunnel
+      area: [50, 50, 100, 100]
+      action: open_scene
+      target: tunnel_entry

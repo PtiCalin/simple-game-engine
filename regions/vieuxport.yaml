@@ -1,0 +1,8 @@
+region:
+  id: vieuxport
+  title: "Vieux Port"
+  map: assets/maps/vieuxport_map.png
+  entry_scene: canal_start
+  scenes:
+    - canal_start
+    - tunnel_entry
