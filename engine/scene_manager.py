@@ -4,6 +4,8 @@ import os
 import yaml
 import pygame
 
+from .asset_manager import AssetManager
+
 from .timeline_engine import TimelineEngine
 
 from .game_state import GameState
@@ -29,6 +31,7 @@ class SceneManager:
         self.game_state.load()
         self.dialogue_engine = DialogueEngine(self.game_state)
         self.timeline_engine = TimelineEngine(self.game_state)
+        self.assets = AssetManager()
         self.scene_start_time = 0
         self.scenes_dir = self.config.get("scenes_dir", "game/scenes")
         self.world_manager: WorldManager | None = None
@@ -115,6 +118,7 @@ class SceneManager:
 
     def activate_scene(self, scene: Scene):
         """Load assets and enable features for the given scene."""
+        self.assets.preload_scene(scene)
         self.overlays = []
         self.active_features = scene.features or {}
         self.hotspots = scene.hotspots or []
@@ -124,20 +128,19 @@ class SceneManager:
             self.timeline_engine.add_events(scene.events, self.scene_start_time, scene.id)
 
         music_path = self.active_features.get("music")
-        if music_path and os.path.exists(music_path):
-            try:
-                pygame.mixer.music.load(music_path)
-                pygame.mixer.music.play(-1)
-            except pygame.error as exc:
-                print(f"Failed to play music '{music_path}': {exc}")
+        if music_path:
+            cached = self.assets.get_music(music_path)
+            if cached and pygame:
+                try:
+                    pygame.mixer.music.load(cached)
+                    pygame.mixer.music.play(-1)
+                except pygame.error as exc:  # pragma: no cover - UI only
+                    print(f"Failed to play music '{music_path}': {exc}")
 
         for overlay_path in scene.overlays:
-            if os.path.exists(overlay_path):
-                try:
-                    image = pygame.image.load(overlay_path).convert_alpha()
-                    self.overlays.append(image)
-                except pygame.error as exc:
-                    print(f"Failed to load overlay '{overlay_path}': {exc}")
+            image = self.assets.get_image(overlay_path)
+            if image:
+                self.overlays.append(image)
 
     # ------------------------------------------------------------------
     # Hotspot Actions
