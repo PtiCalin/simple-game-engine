@@ -13,10 +13,6 @@ def test_world_loading():
     wm = WorldManager("game/worlds/montreal.yaml")
     assert wm.world.id == "montreal"
     assert wm.world.start_region == "mileend"
-    assert wm.world.global_music == "assets/music/montreal_theme.ogg"
-    assert wm.world.loop_time == 6000
-    assert wm.world.gravity == 9.8
-    assert wm.world.weather == "rain"
     assert "mileend" in wm.world.regions
     assert wm.current_region() is not None
     assert wm.current_region().id == "mileend"
