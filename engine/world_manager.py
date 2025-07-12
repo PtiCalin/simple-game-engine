@@ -12,6 +12,8 @@ class Region:
     """Simple region containing a list of scene identifiers."""
 
     id: str
+    title: str = ""
+    entry_scene: Optional[str] = None
     scenes: List[str] = field(default_factory=list)
 
 
@@ -40,22 +42,29 @@ class WorldState:
 class WorldManager:
     """Load world data and keep track of the current region and scene."""
 
-    def __init__(self, path: str):
-        self.path = path
-        self.world = self.load_world(path)
+    def __init__(self, path_or_id: str, worlds_dir: str = "game/worlds"):
+        self.worlds_dir = worlds_dir
+        if os.path.exists(path_or_id):
+            self.path = path_or_id
+        else:
+            self.path = os.path.join(self.worlds_dir, f"{path_or_id}.yaml")
+        self.world = self._load_world_file(self.path)
         self.state = WorldState(
             current_region=self.world.start_region,
             current_scene=None,
         )
         if self.state.current_region:
             region = self.world.regions.get(self.state.current_region)
-            if region and region.scenes:
-                self.state.current_scene = region.scenes[0]
+            if region:
+                self.state.current_scene = (
+                    region.entry_scene
+                    or (region.scenes[0] if region.scenes else None)
+                )
 
     # ------------------------------------------------------------------
-    # Loading
+    # Loading helpers
     # ------------------------------------------------------------------
-    def load_world(self, path: str) -> World:
+    def _load_world_file(self, path: str) -> World:
         if not os.path.exists(path):
             raise FileNotFoundError(f"World file not found: {path}")
         with open(path, "r") as fh:
@@ -69,7 +78,12 @@ class WorldManager:
             rid = entry.get("id")
             scenes = entry.get("scenes", []) or []
             if rid:
-                regions[rid] = Region(id=rid, scenes=list(scenes))
+                regions[rid] = Region(
+                    id=rid,
+                    title=entry.get("title", ""),
+                    entry_scene=entry.get("entry_scene"),
+                    scenes=list(scenes),
+                )
         return World(
             id=world_data.get("id", ""),
             title=world_data.get("title", ""),
@@ -80,6 +94,21 @@ class WorldManager:
             weather=world_data.get("weather"),
             regions=regions,
         )
+
+    def load_world(self, world_id: str) -> None:
+        """Load a new world given its identifier."""
+        path = os.path.join(self.worlds_dir, f"{world_id}.yaml")
+        self.path = path
+        self.world = self._load_world_file(path)
+        self.state.current_region = self.world.start_region
+        self.state.current_scene = None
+        if self.state.current_region:
+            region = self.world.regions.get(self.state.current_region)
+            if region:
+                self.state.current_scene = (
+                    region.entry_scene
+                    or (region.scenes[0] if region.scenes else None)
+                )
 
     # ------------------------------------------------------------------
     # Accessors
@@ -92,6 +121,30 @@ class WorldManager:
     def current_scene(self) -> Optional[str]:
         return self.state.current_scene
 
+    def get_current_region(self) -> Optional[str]:
+        """Return the identifier of the active region."""
+        return self.state.current_region
+
+    def get_start_scene(self) -> Optional[str]:
+        """Return the starting scene for the current world."""
+        if not self.world.start_region:
+            return None
+        region = self.world.regions.get(self.world.start_region)
+        if not region:
+            return None
+        return region.entry_scene or (region.scenes[0] if region.scenes else None)
+
+    def get_world_metadata(self) -> Dict[str, Optional[str]]:
+        """Return key metadata about the loaded world."""
+        return {
+            "id": self.world.id,
+            "title": self.world.title,
+            "global_music": self.world.global_music,
+            "loop_time": self.world.loop_time,
+            "gravity": self.world.gravity,
+            "weather": self.world.weather,
+        }
+
     # ------------------------------------------------------------------
     # State Management
     # ------------------------------------------------------------------
@@ -100,7 +153,11 @@ class WorldManager:
         if not region:
             return
         self.state.current_region = region_id
-        self.state.current_scene = scene_id or (region.scenes[0] if region.scenes else None)
+        self.state.current_scene = (
+            scene_id
+            or region.entry_scene
+            or (region.scenes[0] if region.scenes else None)
+        )
 
     def save_state(self, path: str) -> None:
         data = {
@@ -117,3 +174,4 @@ class WorldManager:
             data = json.load(fh)
         self.state.current_region = data.get("current_region")
         self.state.current_scene = data.get("current_scene")
+
