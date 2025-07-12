@@ -18,6 +18,7 @@ class AssetManager:
     def __init__(self) -> None:
         self.images: Dict[str, "pygame.Surface"] = {}
         self.music: Dict[str, str] = {}
+        self.sounds: Dict[str, "pygame.mixer.Sound"] = {}
 
     # ------------------------------------------------------------------
     # Image helpers
@@ -63,6 +64,27 @@ class AssetManager:
         return path
 
     # ------------------------------------------------------------------
+    # Sound effect helpers
+    # ------------------------------------------------------------------
+    def get_sound(self, path: str) -> Optional["pygame.mixer.Sound"]:
+        """Load a sound effect from ``path`` and cache it."""
+        if path in self.sounds:
+            return self.sounds[path]
+        if not pygame:
+            logger.info("pygame not available, skipping sound load: %s", path)
+            return None
+        if not os.path.exists(path):
+            logger.warning("Sound not found: %s", path)
+            return None
+        try:
+            sound = pygame.mixer.Sound(path)
+        except Exception as exc:  # pragma: no cover - only when pygame fails
+            logger.error("Failed to load sound '%s': %s", path, exc)
+            return None
+        self.sounds[path] = sound
+        return sound
+
+    # ------------------------------------------------------------------
     # Scene helpers
     # ------------------------------------------------------------------
     def preload_scene(self, scene: Scene) -> None:
@@ -74,4 +96,11 @@ class AssetManager:
         music_path = scene.features.get("music") if scene.features else None
         if music_path:
             self.get_music(music_path)
+        if scene.features:
+            sound_path = scene.features.get("sound")
+            if sound_path:
+                self.get_sound(sound_path)
+            for snd in scene.features.get("sounds", []):
+                self.get_sound(snd)
+
 
