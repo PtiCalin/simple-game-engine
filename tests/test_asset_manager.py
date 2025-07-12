@@ -60,3 +60,25 @@ def test_getters_with_stub(monkeypatch):
     manager.get_music("music.mp3")
     assert manager.music["music.mp3"] == "music.mp3"
 
+
+def test_load_real_files(monkeypatch, tmp_path):
+    monkeypatch.setitem(sys.modules, "pygame", DummyPygame)
+    from engine.asset_manager import AssetManager
+
+    monkeypatch.setattr("engine.asset_manager.pygame", DummyPygame)
+
+    image_path = tmp_path / "image.png"
+    audio_path = tmp_path / "sound.ogg"
+    image_path.write_bytes(b"img")
+    audio_path.write_bytes(b"aud")
+
+    manager = AssetManager()
+
+    surf = manager.get_image(str(image_path))
+    assert surf is not None
+    assert manager.get_image(str(image_path)) is surf
+
+    music = manager.get_music(str(audio_path))
+    assert music == str(audio_path)
+    assert manager.get_music(str(audio_path)) == str(audio_path)
+

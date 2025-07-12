@@ -30,3 +30,25 @@ def test_save_load_state(tmp_path):
     assert new_wm.state.current_region == "vieuxport"
     assert new_wm.current_scene() == "canal_start"
 
+
+def test_load_custom_world_metadata(tmp_path):
+    yaml_data = """
+    world:
+      id: custom
+      title: "Custom World"
+      start_region: alpha
+      regions:
+        - id: alpha
+          scenes: [start]
+    """
+    path = tmp_path / "world.yaml"
+    path.write_text(yaml_data)
+
+    wm = WorldManager(str(path))
+    assert wm.world.id == "custom"
+    assert wm.world.title == "Custom World"
+    assert wm.world.start_region == "alpha"
+    assert list(wm.world.regions.keys()) == ["alpha"]
+    assert wm.current_region().id == "alpha"
+    assert wm.current_scene() == "start"
+
