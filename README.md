@@ -10,6 +10,7 @@ possibilities.
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![CI](https://github.com/your-username/simple-game-engine/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
 [![Status: WIP](https://img.shields.io/badge/status-in_progress-yellow.svg)](#)
 [![Pull Requests Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./.github/pull_request_template.md)
 [![GitHub Discussions](https://img.shields.io/badge/💬-Discussions-blueviolet?logo=github)](https://github.com/your-username/simple-game-engine/discussions)

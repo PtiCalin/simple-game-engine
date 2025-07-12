@@ -1,0 +1,24 @@
+name: 🖥 Module Proposal
+description: Propose a core module for the game engine.
+title: 'Module: {Subsystem}'
+labels:
+  - module
+  - enhancement
+body:
+  - type: textarea
+    id: module-purpose
+    attributes:
+      label: Purpose
+      description: What problem does this module solve?
+    validations:
+      required: true
+  - type: textarea
+    id: design-notes
+    attributes:
+      label: Design Notes
+      description: Architecture or API considerations.
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Links to related resources or prior art.
