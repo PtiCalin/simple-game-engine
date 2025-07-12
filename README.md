@@ -34,6 +34,10 @@ possibilities.
 - Extensible for visual scripting or modding
 - Engine + toolkit for building games that are weird, personal and beautiful
 
+## 🗺️ Project Roadmap
+
+The full development roadmap lives in [ROADMAP.md](ROADMAP.md).
+
 ---
 
 ## 🚀 Getting Started
