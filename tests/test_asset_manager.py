@@ -42,7 +42,7 @@ def test_preload_without_pygame(monkeypatch, caplog):
     with caplog.at_level(logging.INFO):
         manager.preload_scene(scene)
     assert manager.images == {}
-    assert manager.music == {"song.mp3": "song.mp3"}
+    assert manager.music == {"song.mp3": os.path.join(manager.base_path, "song.mp3")}
     assert "pygame not available" in caplog.text
 
 
@@ -58,7 +58,7 @@ def test_getters_with_stub(monkeypatch):
     assert surf is not None
     assert manager.get_image("img.png") is surf
     manager.get_music("music.mp3")
-    assert manager.music["music.mp3"] == "music.mp3"
+    assert manager.music["music.mp3"] == os.path.join(manager.base_path, "music.mp3")
 
 
 def test_load_real_files(monkeypatch, tmp_path):
