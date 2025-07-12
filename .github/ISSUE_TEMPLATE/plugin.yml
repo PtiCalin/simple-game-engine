@@ -1,0 +1,24 @@
+name: 🛠 Plugin Idea
+description: Suggest a new plugin or extension for the game engine.
+title: 'Plugin: {Short Summary}'
+labels:
+  - plugin
+  - enhancement
+body:
+  - type: textarea
+    id: plugin-description
+    attributes:
+      label: What does the plugin do?
+      description: Describe the functionality and purpose of the plugin.
+    validations:
+      required: true
+  - type: textarea
+    id: integration
+    attributes:
+      label: How does it integrate with the engine?
+      description: Mention any hooks or systems it touches.
+  - type: textarea
+    id: additional-notes
+    attributes:
+      label: Additional context
+      description: Optional notes or considerations.

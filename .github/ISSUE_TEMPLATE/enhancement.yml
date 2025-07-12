@@ -1,0 +1,25 @@
+name: ✨ Enhancement
+description: Suggest an improvement to existing engine functionality.
+title: 'Enhancement: {Area}'
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: current-behavior
+    attributes:
+      label: Current Behavior
+      description: What happens now?
+    validations:
+      required: true
+  - type: textarea
+    id: proposed-behavior
+    attributes:
+      label: Proposed Behavior
+      description: Describe the improved behavior or UX.
+    validations:
+      required: true
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Why is this useful?
+      description: Explain the benefits to players or developers.
