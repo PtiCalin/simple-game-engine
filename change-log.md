@@ -10,6 +10,8 @@ All notable changes to this project will be documented in this file.
   interactions.
 - Added ``TimelineEngine`` to schedule delay-based events that modify ``GameState``.
 - Added ``WorldManager`` to handle world loading and state management.
+- Added ``AssetManager`` for caching images and music.
+- Worlds now use a YAML format loaded by ``WorldManager``.
 
 ## [0.1.0] - 2024-01-01
 
