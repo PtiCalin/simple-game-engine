@@ -1,15 +1,17 @@
 import json
 import os
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 @dataclass
 class GameState:
-    """Track persistent game state like flags and inventory."""
+    """Track persistent game state like flags, variables and inventory."""
 
     save_path: str = "save.json"
     flags: Dict[str, bool] = field(default_factory=dict)
+    variables: Dict[str, Any] = field(default_factory=dict)
     inventory: List[str] = field(default_factory=list)
+    current_scene: str = ""
     clues: List[str] = field(default_factory=list)
     unlocked_scenes: List[str] = field(default_factory=list)
 
@@ -22,6 +24,25 @@ class GameState:
     def toggle_flag(self, name: str) -> None:
         self.flags[name] = not self.flags.get(name, False)
 
+    def set_variable(self, key: str, value: Any) -> None:
+        self.variables[key] = value
+
+    def get_variable(self, key: str) -> Any:
+        return self.variables.get(key)
+
+    def add_item(self, item_id: str) -> None:
+        if item_id not in self.inventory:
+            self.inventory.append(item_id)
+
+    def has_item(self, item_id: str) -> bool:
+        return item_id in self.inventory
+
+    def set_scene(self, scene_id: str) -> None:
+        self.current_scene = scene_id
+
+    def get_scene(self) -> str:
+        return self.current_scene
+
     def check_condition(self, condition: Optional[str]) -> bool:
         if not condition:
             return True
@@ -29,22 +50,34 @@ class GameState:
             return not self.get_flag(condition[1:])
         return self.get_flag(condition)
 
-    def save(self) -> None:
+    def save(self, path: Optional[str] = None) -> None:
+        filepath = path or self.save_path
         data = {
             "flags": self.flags,
+            "variables": self.variables,
             "inventory": self.inventory,
+            "current_scene": self.current_scene,
             "clues": self.clues,
             "unlocked_scenes": self.unlocked_scenes,
         }
-        with open(self.save_path, "w") as fh:
-            json.dump(data, fh)
+        try:
+            with open(filepath, "w", encoding="utf-8") as fh:
+                json.dump(data, fh, indent=2, ensure_ascii=False)
+        except OSError:
+            pass
 
-    def load(self) -> None:
-        if not os.path.exists(self.save_path):
+    def load(self, path: Optional[str] = None) -> None:
+        filepath = path or self.save_path
+        if not os.path.exists(filepath):
             return
-        with open(self.save_path, "r") as fh:
-            data = json.load(fh)
+        try:
+            with open(filepath, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except (OSError, json.JSONDecodeError):
+            return
         self.flags = data.get("flags", {})
+        self.variables = data.get("variables", {})
         self.inventory = data.get("inventory", [])
+        self.current_scene = data.get("current_scene", "")
         self.clues = data.get("clues", [])
         self.unlocked_scenes = data.get("unlocked_scenes", [])
