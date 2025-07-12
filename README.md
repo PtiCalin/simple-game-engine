@@ -69,6 +69,40 @@ events:
     flag: door_closed
 ```
 
+### 🗺 World Manager
+
+Worlds are described in YAML files that list regions and scenes. This new format
+includes metadata like ``title`` and ``start_region``. Load a world with
+``WorldManager``:
+
+```yaml
+world:
+  id: montreal
+  title: "Surreal Montreal"
+  start_region: mileend
+  regions:
+    - id: mileend
+      scenes: [ruelle_portail]
+```
+
+```python
+from engine.world_manager import WorldManager
+wm = WorldManager("game/worlds/montreal.yaml")
+print(wm.current_scene())
+```
+
+### 🎨 Asset Manager
+
+Use ``AssetManager`` to cache images and music referenced by scenes:
+
+```python
+from engine.asset_manager import AssetManager
+assets = AssetManager()
+scene = ...  # a Scene object
+assets.preload_scene(scene)
+background = assets.get_image(scene.background)
+```
+
 ---
 
 ## 🤝 Contributing
