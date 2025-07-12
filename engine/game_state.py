@@ -3,9 +3,10 @@ import os
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional
 
+
 @dataclass
 class GameState:
-    """Track persistent game state like flags, variables and inventory."""
+    """Persistent game memory for flags, variables, inventory and scenes."""
 
     save_path: str = "save.json"
     flags: Dict[str, bool] = field(default_factory=dict)
@@ -24,24 +25,65 @@ class GameState:
     def toggle_flag(self, name: str) -> None:
         self.flags[name] = not self.flags.get(name, False)
 
-    def set_variable(self, key: str, value: Any) -> None:
+    def set_var(self, key: str, value: Any) -> None:
+        """Store an arbitrary value in ``variables``."""
         self.variables[key] = value
 
-    def get_variable(self, key: str) -> Any:
-        return self.variables.get(key)
+    def get_var(self, key: str, default: Optional[Any] = None) -> Any:
+        """Retrieve a variable value or ``default`` if missing."""
+        return self.variables.get(key, default)
+
+    # ------------------------------------------------------------------
+    # Backwards compatibility helpers
+    # ------------------------------------------------------------------
+    def set_variable(self, key: str, value: Any) -> None:
+        self.set_var(key, value)
+
+    def get_variable(self, key: str, default: Optional[Any] = None) -> Any:
+        return self.get_var(key, default)
 
     def add_item(self, item_id: str) -> None:
         if item_id not in self.inventory:
             self.inventory.append(item_id)
 
+    def remove_item(self, item_id: str) -> None:
+        """Remove ``item_id`` from inventory if present."""
+        if item_id in self.inventory:
+            self.inventory.remove(item_id)
+
     def has_item(self, item_id: str) -> bool:
         return item_id in self.inventory
+
+    def list_inventory(self) -> List[str]:
+        """Return a copy of the current inventory list."""
+        return list(self.inventory)
 
     def set_scene(self, scene_id: str) -> None:
         self.current_scene = scene_id
 
     def get_scene(self) -> str:
         return self.current_scene
+
+    def clear(self) -> None:
+        """Reset all tracked state to defaults."""
+        self.flags.clear()
+        self.variables.clear()
+        self.inventory.clear()
+        self.current_scene = ""
+        self.clues.clear()
+        self.unlocked_scenes.clear()
+
+    def export_debug(self) -> None:
+        """Print the current state as formatted JSON for debugging."""
+        data = {
+            "flags": self.flags,
+            "variables": self.variables,
+            "inventory": self.inventory,
+            "current_scene": self.current_scene,
+            "clues": self.clues,
+            "unlocked_scenes": self.unlocked_scenes,
+        }
+        print(json.dumps(data, indent=2, ensure_ascii=False))
 
     def check_condition(self, condition: Optional[str]) -> bool:
         if not condition:
