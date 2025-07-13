@@ -1,0 +1,7 @@
+font_scale: 1.0
+contrast_mode: default
+subtitles_enabled: true
+captions_enabled: false
+motion_reduction: false
+input_delay_buffer: 0.0
+ui_theme: default
