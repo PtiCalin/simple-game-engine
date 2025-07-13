@@ -1,0 +1,20 @@
+performance:
+  target_fps: 60
+  asset_cache_limit_mb: 200
+  scene_cache_mode: "on_demand"
+  diagnostics_enabled: true
+  unload_idle_scenes: true
+
+profiles:
+  balanced:
+    target_fps: 60
+    cache_limit: 200
+    diagnostics: true
+  low_power:
+    target_fps: 30
+    cache_limit: 100
+    diagnostics: false
+  max_quality:
+    target_fps: 120
+    cache_limit: 400
+    diagnostics: false
