@@ -8,54 +8,67 @@ from engine.dialogue_engine import DialogueEngine
 from engine.game_state import GameState
 
 
-def test_dialogue_flow(tmp_path):
+def _write_dialogue(path):
     data = {
         "dialogues": [
             {
                 "id": "gatekeeper_intro",
+                "memory_flag": "talked_to_gatekeeper",
                 "lines": [
-                    {"speaker": "Gatekeeper", "text": "You're not from here, are you?"},
+                    {"speaker": "Gatekeeper", "text": "You're not from around here, are you?"},
                     {
                         "options": [
-                            {"text": "I'm just passing through.", "next": "gatekeeper_reply1"},
-                            {"text": "Who are you?", "next": "gatekeeper_reply2"},
+                            {"text": "I'm just passing through.", "next": "reply_chill"},
+                            {"text": "Who are you?", "next": "reply_defensive", "condition": "!npc_hostile"},
                         ]
                     },
+                    {"id": "reply_chill", "speaker": "Gatekeeper", "text": "Then don't get lost in these ruins."},
+                    {"id": "reply_defensive", "speaker": "Gatekeeper", "text": "That's none of your business, outsider."},
                 ],
-            },
-            {
-                "id": "gatekeeper_reply1",
-                "lines": [
-                    {"speaker": "Gatekeeper", "text": "Keep moving then.", "set_flag": "passed_gate"}
-                ],
-            },
-            {
-                "id": "gatekeeper_reply2",
-                "lines": [
-                    {"speaker": "Gatekeeper", "text": "I'm the guardian of this gate.", "set_flag": "asked_name"}
-                ],
-            },
+                "on_complete": {"set_flag": "gatekeeper_intro_complete"},
+            }
         ]
     }
-    path = tmp_path / "dialogue.json"
     with open(path, "w") as fh:
         json.dump(data, fh)
 
+
+def test_dialogue_flow(tmp_path):
+    path = tmp_path / "dialogue.json"
+    _write_dialogue(path)
+
     state = GameState()
+    state.set_flag("npc_hostile", False)
     engine = DialogueEngine(state)
     engine.load_file(str(path))
     engine.start("gatekeeper_intro")
 
     node = engine.current_node()
-    assert node.text == "You're not from here, are you?"
-    engine.advance()
+    assert node.text == "You're not from around here, are you?"
+    assert state.get_flag("talked_to_gatekeeper") is True
 
-    node = engine.current_node()
-    assert len(node.options) == 2
+    engine.advance()
+    assert engine.awaiting_choice is True
+    assert len(engine._option_cache) == 2
 
     engine.choose(0)
     node = engine.current_node()
-    assert node.text == "Keep moving then."
+    assert node.text == "Then don't get lost in these ruins."
     engine.advance()
-    assert state.get_flag("passed_gate") is True
+    assert state.get_flag("gatekeeper_intro_complete") is True
 
+
+def test_option_condition(tmp_path):
+    path = tmp_path / "dialogue.json"
+    _write_dialogue(path)
+
+    state = GameState()
+    state.set_flag("npc_hostile", True)
+    engine = DialogueEngine(state)
+    engine.load_file(str(path))
+    engine.start("gatekeeper_intro")
+    engine.advance()
+
+    assert engine.awaiting_choice is True
+    assert len(engine._option_cache) == 1
+    assert engine._option_cache[0].text == "I'm just passing through."
