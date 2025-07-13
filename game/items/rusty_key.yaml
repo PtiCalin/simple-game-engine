@@ -1,0 +1,11 @@
+item:
+  id: rusty_key
+  name: "Rusty Key"
+  description: "Old and corroded, but might still work..."
+  icon: "icons/key_rusty.png"
+  tags: [key, metal]
+  usable_on: ["locked_door"]
+  combine_with:
+    - item: oil
+      result: polished_key
+
