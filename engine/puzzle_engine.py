@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, Type, Optional
+from typing import Any, Callable, Dict, Optional, Type
 
 try:
     import yaml  # type: ignore
@@ -25,74 +25,117 @@ class PuzzleMeta:
     scene: str
     solved: bool = False
     description: str = ""
+    data: dict[str, Any] = field(default_factory=dict)
+    condition: Optional[str] = None
+    on_solve: dict[str, Any] = field(default_factory=dict)
 
 
-class BasePuzzle:
+class PuzzleBase:
     """Base class for all puzzle implementations."""
 
     def __init__(self, meta: PuzzleMeta, engine: "PuzzleEngine") -> None:
         self.meta = meta
         self.engine = engine
+        self.solved = False
 
     def start(self) -> None:
         """Initialize puzzle state when activated."""
-        pass
+        return None
 
-    def handle_event(self, event) -> None:  # pragma: no cover - UI only
-        if not pygame:
-            return
+    def update(self) -> None:
+        """Update internal state each frame."""
+        return None
 
     def render(self, screen) -> None:  # pragma: no cover - UI only
         if not pygame:
             return
 
-    def solve(self) -> None:
-        """Mark this puzzle as solved through the engine."""
+    def handle_input(self, event) -> None:  # pragma: no cover - UI only
+        if not pygame:
+            return
+
+    def mark_solved(self) -> None:
+        self.solved = True
         self.engine.mark_solved(self.meta.id)
 
-
-class LogicPuzzle(BasePuzzle):
-    pass
-
-
-class MemoryPuzzle(BasePuzzle):
-    pass
+    def is_solved(self) -> bool:
+        return self.solved
 
 
-class SymbolPuzzle(BasePuzzle):
-    pass
+class LogicPuzzle(PuzzleBase):
+    """Simple sequence/logic puzzle."""
+
+    def submit_answer(self, answer: Any) -> None:
+        if answer == self.meta.data.get("solution"):
+            self.mark_solved()
 
 
-class PhysicsPuzzle(BasePuzzle):
-    pass
+class ManipulationPuzzle(PuzzleBase):
+    """Drag or arrange items into the correct order."""
+
+    def set_state(self, state: Any) -> None:
+        if state == self.meta.data.get("solution"):
+            self.mark_solved()
+
+
+class DeductionPuzzle(PuzzleBase):
+    """Combine clues to reach the correct conclusion."""
+
+    def __init__(self, meta: PuzzleMeta, engine: "PuzzleEngine") -> None:
+        super().__init__(meta, engine)
+        self.clues: set[Any] = set()
+
+    def add_clue(self, clue: Any) -> None:
+        self.clues.add(clue)
+        required = set(self.meta.data.get("solution", []))
+        if required and required.issubset(self.clues):
+            self.mark_solved()
+
+
+# backward compatibility alias
+BasePuzzle = PuzzleBase
 
 
 class PuzzleEngine:
     """Load puzzles from YAML and instantiate puzzle handlers."""
 
-    def __init__(self, state: GameState) -> None:
+    def __init__(
+        self,
+        state: GameState,
+        ui_overlay: "UIOverlay | None" = None,
+        scene_manager: "SceneManager | None" = None,
+    ) -> None:
         self.state = state
         self.registry: Dict[str, PuzzleMeta] = {}
-        self.handlers: Dict[str, Type[BasePuzzle]] = {
+        self.handlers: Dict[str, Type[PuzzleBase]] = {
             "logic": LogicPuzzle,
-            "memory": MemoryPuzzle,
-            "symbol": SymbolPuzzle,
-            "physics": PhysicsPuzzle,
+            "manipulation": ManipulationPuzzle,
+            "deduction": DeductionPuzzle,
         }
+        self.active_puzzle: Optional[PuzzleBase] = None
+        self.ui_overlay = ui_overlay
+        self.scene_manager = scene_manager
 
     # ------------------------------------------------------------------
     # Loading
     # ------------------------------------------------------------------
     def load_file(self, path: str) -> None:
-        """Load puzzle metadata from a YAML file."""
-        with open(path, "r") as fh:
+        """Load puzzle metadata from a YAML or JSON file."""
+        with open(path, "r", encoding="utf-8") as fh:
             if yaml:
                 data = yaml.safe_load(fh) or {}
             else:  # pragma: no cover - fallback when PyYAML missing
                 import json
 
                 data = json.load(fh)
-        for entry in data.get("puzzles", []):
+
+        entries = []
+        if "puzzles" in data and isinstance(data["puzzles"], list):
+            entries = data["puzzles"]
+        elif "puzzle" in data and isinstance(data["puzzle"], dict):
+            entries = [data["puzzle"]]
+
+        for entry in entries:
             if not isinstance(entry, dict):
                 continue
             puzzle = PuzzleMeta(
@@ -101,27 +144,82 @@ class PuzzleEngine:
                 scene=entry.get("scene", ""),
                 solved=bool(entry.get("solved", False)),
                 description=entry.get("description", ""),
+                data=entry.get("data", {}) or {},
+                condition=entry.get("condition"),
+                on_solve=entry.get("on_solve", {}) or {},
             )
             self.registry[puzzle.id] = puzzle
+
+    def register_type(self, name: str, cls: Type[PuzzleBase]) -> None:
+        """Register a new puzzle handler class."""
+        self.handlers[name] = cls
+
+    def load_puzzle(self, puzzle_data: dict[str, Any]) -> PuzzleBase:
+        """Instantiate a puzzle from raw data and set it active."""
+        meta = PuzzleMeta(
+            id=puzzle_data.get("id", ""),
+            type=puzzle_data.get("type", "logic"),
+            scene=puzzle_data.get("scene", ""),
+            solved=bool(puzzle_data.get("solved", False)),
+            description=puzzle_data.get("description", ""),
+            data=puzzle_data.get("data", {}) or {},
+            condition=puzzle_data.get("condition"),
+            on_solve=puzzle_data.get("on_solve", {}) or {},
+        )
+        cls = self.handlers.get(meta.type, PuzzleBase)
+        puzzle = cls(meta, self)
+        self.active_puzzle = puzzle
+        puzzle.start()
+        return puzzle
 
     # ------------------------------------------------------------------
     # Puzzle status
     # ------------------------------------------------------------------
     def mark_solved(self, puzzle_id: str) -> None:
-        """Set the solved flag for ``puzzle_id`` in :class:`GameState`."""
+        """Set the solved flag for ``puzzle_id`` and handle actions."""
         self.state.set_flag(f"puzzle_{puzzle_id}", True)
         self.state.save()
+        meta = self.registry.get(puzzle_id)
+        if meta:
+            meta.solved = True
+            actions = meta.on_solve
+        else:
+            actions = {}
+        if actions.get("set_flag"):
+            self.state.set_flag(actions["set_flag"], True)
+        if actions.get("go_to_scene") and self.scene_manager:
+            self.scene_manager.open_scene(actions["go_to_scene"])
+        if actions.get("show_dialogue") and self.ui_overlay:
+            self.ui_overlay.draw_dialogue_box(actions["show_dialogue"])
 
     def is_solved(self, puzzle_id: str) -> bool:
         """Return True if ``puzzle_id`` is marked solved."""
         return self.state.get_flag(f"puzzle_{puzzle_id}")
 
     # ------------------------------------------------------------------
+    # Active Puzzle
+    # ------------------------------------------------------------------
+    def update(self) -> None:
+        if self.active_puzzle:
+            self.active_puzzle.update()
+
+    def render(self, surface) -> None:  # pragma: no cover - UI only
+        if self.active_puzzle:
+            self.active_puzzle.render(surface)
+
+    def handle_input(self, event) -> None:  # pragma: no cover - UI only
+        if self.active_puzzle:
+            self.active_puzzle.handle_input(event)
+
+    def active_solved(self) -> bool:
+        return self.active_puzzle.is_solved() if self.active_puzzle else False
+
+    # ------------------------------------------------------------------
     # Factory
     # ------------------------------------------------------------------
-    def create(self, puzzle_id: str) -> Optional[BasePuzzle]:
+    def create(self, puzzle_id: str) -> Optional[PuzzleBase]:
         meta = self.registry.get(puzzle_id)
         if not meta:
             return None
-        cls = self.handlers.get(meta.type, BasePuzzle)
+        cls = self.handlers.get(meta.type, PuzzleBase)
         return cls(meta, self)
