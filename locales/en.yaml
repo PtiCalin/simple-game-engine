@@ -1,0 +1,9 @@
+ui:
+  start_game: "Start Game"
+  continue: "Continue"
+  settings: "Settings"
+  exit: "Exit"
+
+dialogue:
+  intro_line1: "Welcome to Dreamspace."
+  intro_line2: "Time folds inward here."

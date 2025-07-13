@@ -1,0 +1,9 @@
+ui:
+  start_game: "Commencer"
+  continue: "Continuer"
+  settings: "Paramètres"
+  exit: "Quitter"
+
+dialogue:
+  intro_line1: "Bienvenue dans l’Espace-Rêve."
+  intro_line2: "Ici, le temps se replie sur lui-même."
