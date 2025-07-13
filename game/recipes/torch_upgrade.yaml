@@ -1,0 +1,6 @@
+recipe:
+  id: torch_upgrade
+  ingredients: ["torch", "oil", "cloth"]
+  result: "burning_torch"
+  tags: [build, light]
+
