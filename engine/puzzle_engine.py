@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Callable, Dict, Optional, Type
+from importlib import import_module
+from pathlib import Path
+from typing import Any, Dict, Optional, Type
 
 try:
     import yaml  # type: ignore
@@ -26,8 +28,9 @@ class PuzzleMeta:
     solved: bool = False
     description: str = ""
     data: dict[str, Any] = field(default_factory=dict)
+    solution: Any = None
     condition: Optional[str] = None
-    on_solve: dict[str, Any] = field(default_factory=dict)
+    on_solve: Any = field(default_factory=dict)
 
 
 class PuzzleBase:
@@ -61,21 +64,34 @@ class PuzzleBase:
     def is_solved(self) -> bool:
         return self.solved
 
+    def check_solution(self, player_input: Any) -> bool:
+        """Check ``player_input`` against ``meta.solution``."""
+        if player_input == self.meta.solution:
+            self.mark_solved()
+            return True
+        return False
+
 
 class LogicPuzzle(PuzzleBase):
     """Simple sequence/logic puzzle."""
 
-    def submit_answer(self, answer: Any) -> None:
-        if answer == self.meta.data.get("solution"):
+    def check_solution(self, player_input: Any) -> bool:
+        solution = self.meta.solution or self.meta.data.get("solution")
+        if player_input == solution:
             self.mark_solved()
+            return True
+        return False
 
 
 class ManipulationPuzzle(PuzzleBase):
     """Drag or arrange items into the correct order."""
 
-    def set_state(self, state: Any) -> None:
-        if state == self.meta.data.get("solution"):
+    def check_solution(self, player_input: Any) -> bool:
+        solution = self.meta.solution or self.meta.data.get("solution")
+        if player_input == solution:
             self.mark_solved()
+            return True
+        return False
 
 
 class DeductionPuzzle(PuzzleBase):
@@ -87,7 +103,7 @@ class DeductionPuzzle(PuzzleBase):
 
     def add_clue(self, clue: Any) -> None:
         self.clues.add(clue)
-        required = set(self.meta.data.get("solution", []))
+        required = set(self.meta.solution or self.meta.data.get("solution", []))
         if required and required.issubset(self.clues):
             self.mark_solved()
 
@@ -112,9 +128,22 @@ class PuzzleEngine:
             "manipulation": ManipulationPuzzle,
             "deduction": DeductionPuzzle,
         }
+        self._load_builtin_types()
         self.active_puzzle: Optional[PuzzleBase] = None
         self.ui_overlay = ui_overlay
         self.scene_manager = scene_manager
+
+    def _load_builtin_types(self) -> None:
+        """Import puzzle modules from ``engine.puzzle_types`` if available."""
+        pkg_path = Path(__file__).with_name("puzzle_types")
+        if not pkg_path.exists():
+            return
+        try:
+            loader = import_module("engine.puzzle_types").load_types
+        except Exception:
+            return
+        for name, cls in loader().items():
+            self.handlers[name] = cls
 
     # ------------------------------------------------------------------
     # Loading
@@ -145,7 +174,29 @@ class PuzzleEngine:
                 solved=bool(entry.get("solved", False)),
                 description=entry.get("description", ""),
                 data=entry.get("data", {}) or {},
+                solution=entry.get("solution"),
                 condition=entry.get("condition"),
+                on_solve=entry.get("on_solve", {}) or {},
+            )
+            self.registry[puzzle.id] = puzzle
+
+    def load_from_yaml(self, scene_id: str, data: Dict[str, Any]) -> None:
+        """Load puzzle definitions from already parsed scene YAML."""
+        entries = data.get("puzzles", [])
+        if not isinstance(entries, list):
+            return
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            puzzle = PuzzleMeta(
+                id=entry.get("id", ""),
+                type=entry.get("type", "logic"),
+                scene=scene_id,
+                solved=bool(entry.get("solved", False)),
+                description=entry.get("description", ""),
+                data=entry.get("data", {}) or {},
+                solution=entry.get("solution"),
+                condition=entry.get("conditions") or entry.get("condition"),
                 on_solve=entry.get("on_solve", {}) or {},
             )
             self.registry[puzzle.id] = puzzle
@@ -163,6 +214,7 @@ class PuzzleEngine:
             solved=bool(puzzle_data.get("solved", False)),
             description=puzzle_data.get("description", ""),
             data=puzzle_data.get("data", {}) or {},
+            solution=puzzle_data.get("solution"),
             condition=puzzle_data.get("condition"),
             on_solve=puzzle_data.get("on_solve", {}) or {},
         )
@@ -185,12 +237,19 @@ class PuzzleEngine:
             actions = meta.on_solve
         else:
             actions = {}
-        if actions.get("set_flag"):
-            self.state.set_flag(actions["set_flag"], True)
-        if actions.get("go_to_scene") and self.scene_manager:
-            self.scene_manager.open_scene(actions["go_to_scene"])
-        if actions.get("show_dialogue") and self.ui_overlay:
-            self.ui_overlay.draw_dialogue_box(actions["show_dialogue"])
+        if isinstance(actions, list):
+            acts = actions
+        else:
+            acts = [actions]
+        for act in acts:
+            if not isinstance(act, dict):
+                continue
+            if act.get("set_flag"):
+                self.state.set_flag(act["set_flag"], True)
+            if act.get("go_to_scene") and self.scene_manager:
+                self.scene_manager.open_scene(act["go_to_scene"])
+            if act.get("show_dialogue") and self.ui_overlay:
+                self.ui_overlay.draw_dialogue_box(act["show_dialogue"])
 
     def is_solved(self, puzzle_id: str) -> bool:
         """Return True if ``puzzle_id`` is marked solved."""
@@ -223,3 +282,10 @@ class PuzzleEngine:
             return None
         cls = self.handlers.get(meta.type, PuzzleBase)
         return cls(meta, self)
+
+    def check(self, puzzle_id: str, player_input: Any) -> bool:
+        """Validate ``player_input`` for ``puzzle_id`` and mark solved if correct."""
+        puzzle = self.create(puzzle_id)
+        if not puzzle:
+            return False
+        return puzzle.check_solution(player_input)

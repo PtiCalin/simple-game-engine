@@ -36,6 +36,10 @@ class PuzzleManager:
         """Load puzzle registry from ``path``."""
         self.engine.load_file(path)
 
+    def load_from_yaml(self, scene_id: str, data: dict) -> None:
+        """Load puzzle definitions from parsed YAML ``data``."""
+        self.engine.load_from_yaml(scene_id, data)
+
     # ------------------------------------------------------------------
     # Activation
     # ------------------------------------------------------------------
@@ -69,3 +73,7 @@ class PuzzleManager:
     def update(self) -> None:
         if self.active:
             self.active.update()
+
+    def check(self, puzzle_id: str, player_input) -> bool:
+        """Validate ``player_input`` for puzzle and mark solved if correct."""
+        return self.engine.check(puzzle_id, player_input)
