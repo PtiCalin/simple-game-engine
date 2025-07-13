@@ -85,6 +85,19 @@ class UIOverlay:
         if text_surf:
             self.screen.blit(text_surf, (rect.left + padding, y))
 
+    def draw_options(self, options: List[str]) -> None:  # pragma: no cover - UI only
+        """Render a numbered list of options below the dialogue box."""
+        if not pygame or not self.font:
+            return
+        padding = int(self.theme["padding"])
+        width, height = self.screen.get_size()
+        y = height - padding - self.font.get_height() * len(options) - 5
+        for idx, text in enumerate(options, 1):
+            surf = self._render_text(f"{idx}. {text}")
+            if surf:
+                self.screen.blit(surf, (padding * 2, y))
+                y += surf.get_height() + 4
+
     def draw_tooltip(self, text: str, position: Tuple[int, int]) -> None:
         if not pygame or not self.font:
             return
