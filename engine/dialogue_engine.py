@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Any
 
 try:  # pragma: no cover - optional dependency for runtime
     import yaml  # type: ignore
@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:  # pragma: no cover - only for type hints
     from .ui_overlay import UIOverlay
+    from .locale_manager import LocaleManager
 
 
 @dataclass
@@ -30,6 +31,10 @@ class DialogueOption:
     next: Optional[str] = None
     condition: Optional[str] = None
     set_flag: Optional[str] = None
+    requires_flag: Optional[str] = None
+    clear_flag: Optional[str] = None
+    requires_memory: Optional[str] = None
+    set_memory: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -43,6 +48,10 @@ class DialogueLine:
     next: Optional[str] = None
     condition: Optional[str] = None
     set_flag: Optional[str] = None
+    requires_flag: Optional[str] = None
+    clear_flag: Optional[str] = None
+    requires_memory: Optional[str] = None
+    set_memory: Dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass
@@ -58,16 +67,23 @@ class Dialogue:
 class DialogueEngine:
     """Manage dialogue trees and render them through :class:`UIOverlay`."""
 
-    def __init__(self, game_state: GameState, ui_overlay: Optional["UIOverlay"] = None) -> None:
+    def __init__(
+        self,
+        game_state: GameState,
+        ui_overlay: Optional["UIOverlay"] = None,
+        locale_manager: Optional["LocaleManager"] = None,
+    ) -> None:
         self.game_state = game_state
         self.ui_overlay = ui_overlay
+        self.locale_manager = locale_manager
 
         self.dialogues: Dict[str, Dialogue] = {}
         self.active_dialogue_id: Optional[str] = None
         self.current_line_index: int = 0
         self.awaiting_choice: bool = False
         self._option_cache: List[DialogueOption] = []
-        self._memory: Dict[str, List[str]] = {}
+        self._memory_history: Dict[str, List[str]] = {}
+        self._memory_store: Dict[str, Dict[str, Any]] = {}
         self._branch_end: bool = False
 
     # ------------------------------------------------------------------
@@ -123,6 +139,10 @@ class DialogueEngine:
                     next=opt.get("next"),
                     condition=opt.get("condition"),
                     set_flag=opt.get("set_flag"),
+                    requires_flag=opt.get("requires_flag"),
+                    clear_flag=opt.get("clear_flag"),
+                    requires_memory=opt.get("requires_memory"),
+                    set_memory=opt.get("set_memory", {}) or {},
                 )
             )
         return DialogueLine(
@@ -133,6 +153,10 @@ class DialogueEngine:
             next=item.get("next"),
             condition=item.get("condition"),
             set_flag=item.get("set_flag"),
+            requires_flag=item.get("requires_flag"),
+            clear_flag=item.get("clear_flag"),
+            requires_memory=item.get("requires_memory"),
+            set_memory=item.get("set_memory", {}) or {},
         )
 
     # ------------------------------------------------------------------
@@ -154,7 +178,8 @@ class DialogueEngine:
         if dlg.memory_flag:
             self.game_state.set_flag(dlg.memory_flag, True)
 
-        self._memory.setdefault(dialogue_id, [])
+        self._memory_history.setdefault(dialogue_id, [])
+        self._memory_store.setdefault(dialogue_id, {})
 
     def is_active(self) -> bool:
         return self.active_dialogue_id is not None
@@ -171,6 +196,38 @@ class DialogueEngine:
             return self.dialogues.get(self.active_dialogue_id)
         return None
 
+    def _check_memory(self, expression: Optional[str]) -> bool:
+        """Evaluate a simple memory expression."""
+        if not expression:
+            return True
+        expr = expression.strip()
+        op = None
+        if "==" in expr:
+            op = "=="
+        elif "!=" in expr:
+            op = "!="
+        if op:
+            left, right = expr.split(op, 1)
+            right = right.strip().strip("\"'")
+        else:
+            left, right = expr, None
+        left = left.strip()
+        if "." in left:
+            dlg_id, key = left.split(".", 1)
+        else:
+            dlg_id, key = self.active_dialogue_id or "", left
+        value = self._memory_store.get(dlg_id, {}).get(key)
+        if op == "==":
+            return str(value) == right
+        if op == "!=":
+            return str(value) != right
+        return value is not None
+
+    def _set_memory(self, data: Dict[str, Any], dialogue_id: Optional[str] = None) -> None:
+        dlg_id = dialogue_id or (self.active_dialogue_id or "")
+        store = self._memory_store.setdefault(dlg_id, {})
+        store.update({k: str(v) for k, v in (data or {}).items()})
+
     def current_node(self) -> Optional[DialogueLine]:
         dlg = self._current_dialogue()
         if not dlg:
@@ -179,9 +236,17 @@ class DialogueEngine:
         lines = dlg.lines
         while self.current_line_index < len(lines):
             line = lines[self.current_line_index]
-            if self.game_state.check_condition(line.condition):
-                return line
-            self.current_line_index += 1
+            if not self.game_state.check_condition(line.condition):
+                self.current_line_index += 1
+                continue
+            if line.requires_flag and not self.game_state.get_flag(line.requires_flag):
+                self.current_line_index += 1
+                continue
+            if not self._check_memory(line.requires_memory):
+                self.current_line_index += 1
+                continue
+            return line
+
         return None
 
     # ------------------------------------------------------------------
@@ -217,13 +282,21 @@ class DialogueEngine:
 
         if node.options:
             self._option_cache = [
-                opt for opt in node.options if self.game_state.check_condition(opt.condition)
+                opt
+                for opt in node.options
+                if self.game_state.check_condition(opt.condition)
+                and (not opt.requires_flag or self.game_state.get_flag(opt.requires_flag))
+                and self._check_memory(opt.requires_memory)
             ]
             self.awaiting_choice = True
             return node
 
         if node.set_flag:
             self.game_state.set_flag(node.set_flag, True)
+        if node.clear_flag:
+            self.game_state.set_flag(node.clear_flag, False)
+        if node.set_memory:
+            self._set_memory(node.set_memory)
 
         if node.next:
             return self._goto(node.next)
@@ -240,7 +313,11 @@ class DialogueEngine:
         node = self.current_node()
         if node and node.options:
             self._option_cache = [
-                opt for opt in node.options if self.game_state.check_condition(opt.condition)
+                opt
+                for opt in node.options
+                if self.game_state.check_condition(opt.condition)
+                and (not opt.requires_flag or self.game_state.get_flag(opt.requires_flag))
+                and self._check_memory(opt.requires_memory)
             ]
             self.awaiting_choice = True
         return node
@@ -254,10 +331,14 @@ class DialogueEngine:
         choice = self._option_cache[option_index]
         if choice.set_flag:
             self.game_state.set_flag(choice.set_flag, True)
+        if choice.clear_flag:
+            self.game_state.set_flag(choice.clear_flag, False)
+        if choice.set_memory:
+            self._set_memory(choice.set_memory)
 
         self.awaiting_choice = False
-        mem = self._memory.setdefault(self.active_dialogue_id or "", [])
-        mem.append(choice.text)
+        hist = self._memory_history.setdefault(self.active_dialogue_id or "", [])
+        hist.append(choice.text)
 
         if choice.next:
             return self._goto(choice.next)
@@ -296,12 +377,12 @@ class DialogueEngine:
         if not node:
             return
 
-        text = node.text or ""
+        text = self.resolve_localized_text(node.text or "")
         speaker = node.speaker
         self.ui_overlay.draw_dialogue_box(text, speaker)
 
         if self.awaiting_choice:
-            options_text = [opt.text for opt in self._option_cache]
+            options_text = [self.resolve_localized_text(opt.text) for opt in self._option_cache]
             self.ui_overlay.draw_options(options_text)
 
     # Backwards compatibility -------------------------------------------------
@@ -316,4 +397,27 @@ class DialogueEngine:
                 self.choose(event.key - pygame.K_1)
             elif event.key == pygame.K_SPACE:
                 self.advance()
+
+    # ------------------------------------------------------------------
+    # Convenience helpers
+    # ------------------------------------------------------------------
+    def resolve_localized_text(self, key: str) -> str:
+        if self.locale_manager and self.locale_manager.has_translation(key):
+            return self.locale_manager.translate(key)
+        return key
+
+    def get_current_line(self) -> Optional[str]:
+        node = self.current_node()
+        if not node:
+            return None
+        return self.resolve_localized_text(node.text or "")
+
+    def next_line(self, choice_index: Optional[int] = None) -> Optional[str]:
+        if choice_index is not None:
+            node = self.choose(choice_index)
+        else:
+            node = self.advance()
+        if not node:
+            return None
+        return self.resolve_localized_text(node.text or "")
 
