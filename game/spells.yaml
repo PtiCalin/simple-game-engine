@@ -1,0 +1,14 @@
+# DnD-style Spell Data Model
+spells:
+  - name: "Magic Missile"
+    level: 1
+    school: "Evocation"
+    description: "Shoots magical darts."
+    effect:
+      damage: "1d4+1 force"
+  - name: "Shield"
+    level: 1
+    school: "Abjuration"
+    description: "Creates a magical barrier."
+    effect:
+      ac_bonus: 5

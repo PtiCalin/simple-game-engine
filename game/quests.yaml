@@ -1,0 +1,12 @@
+# DnD-style Quest Data Model
+quests:
+  - title: "Find the Lost Tome"
+    description: "Recover the ancient tome from the ruins."
+    status: "active"
+    rewards:
+      - "Spellbook"
+  - title: "Defend the Bridge"
+    description: "Protect the bridge from goblin raiders."
+    status: "active"
+    rewards:
+      - "Battle Axe"

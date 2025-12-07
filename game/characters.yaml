@@ -1,0 +1,41 @@
+# DnD-style Character Data Model
+characters:
+  - name: "Arin"
+    race: "Elf"
+    class: "Wizard"
+    level: 3
+    stats:
+      STR: 8
+      DEX: 14
+      CON: 12
+      INT: 18
+      WIS: 13
+      CHA: 10
+    inventory:
+      - "Wand of Fire"
+      - "Spellbook"
+    spells:
+      - "Magic Missile"
+      - "Shield"
+    quests:
+      - "Find the Lost Tome"
+    status_effects:
+      - "Blessed"
+  - name: "Borin"
+    race: "Dwarf"
+    class: "Fighter"
+    level: 2
+    stats:
+      STR: 16
+      DEX: 10
+      CON: 15
+      INT: 9
+      WIS: 11
+      CHA: 8
+    inventory:
+      - "Battle Axe"
+      - "Chainmail"
+    spells: []
+    quests:
+      - "Defend the Bridge"
+    status_effects: []

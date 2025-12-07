@@ -1,0 +1,21 @@
+# DnD-style Campaign Data Model
+campaigns:
+  - title: "Ruins of Eldoria"
+    description: "Explore the ancient ruins and uncover their secrets."
+    scenes:
+      - "Eldoria Entrance"
+      - "Forgotten Library"
+    npcs:
+      - "Arin"
+      - "Borin"
+    quests:
+      - "Find the Lost Tome"
+  - title: "Goblin Wars"
+    description: "Defend the realm from goblin invasions."
+    scenes:
+      - "Bridge Outpost"
+      - "Goblin Camp"
+    npcs:
+      - "Borin"
+    quests:
+      - "Defend the Bridge"

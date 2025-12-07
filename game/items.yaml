@@ -1,0 +1,26 @@
+# DnD-style Item Data Model
+items:
+  - name: "Wand of Fire"
+    type: "Weapon"
+    description: "Casts fire spells."
+    properties:
+      damage: "1d6 fire"
+      rarity: "Rare"
+  - name: "Spellbook"
+    type: "Tool"
+    description: "Contains wizard spells."
+    properties:
+      pages: 100
+      owner: "Arin"
+  - name: "Battle Axe"
+    type: "Weapon"
+    description: "Heavy axe for melee combat."
+    properties:
+      damage: "1d8 slashing"
+      rarity: "Common"
+  - name: "Chainmail"
+    type: "Armor"
+    description: "Protective metal armor."
+    properties:
+      ac_bonus: 5
+      weight: 40
